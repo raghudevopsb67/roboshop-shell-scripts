@@ -13,15 +13,7 @@ StatusCheck() {
   fi
 }
 
-NODEJS() {
-  echo "Setup NodeJS Repos"
-  curl -sL https://rpm.nodesource.com/setup_lts.x | bash &>>${LOG_FILE}
-  StatusCheck $?
-
-  echo "Install NodeJS"
-  yum install nodejs -y &>>${LOG_FILE}
-  StatusCheck $?
-
+APP_PREREQ() {
   id roboshop &>>${LOG_FILE}
   if [ $? -ne 0 ]; then
     echo "Add RoboShop Application User"
@@ -45,13 +37,11 @@ NODEJS() {
 
   mv ${COMPONENT}-main ${COMPONENT}
   cd /home/roboshop/${COMPONENT}
+}
 
-  echo "Install NodeJS Dependencies"
-  npm install &>>${LOG_FILE}
-  StatusCheck $?
-
+SYSTEMD_SETUP() {
   echo "Update SystemD Service File"
-  sed -i -e 's/REDIS_ENDPOINT/redis.roboshop.internal/' -e 's/MONGO_ENDPOINT/mongodb.roboshop.internal/' -e 's/CATALOGUE_ENDPOINT/catalogue.roboshop.internal/' -e 's/MONGO_DNSNAME/mongodb.roboshop.internal/' /home/roboshop/${COMPONENT}/systemd.service
+  sed -i -e 's/REDIS_ENDPOINT/redis.roboshop.internal/' -e 's/MONGO_ENDPOINT/mongodb.roboshop.internal/' -e 's/CATALOGUE_ENDPOINT/catalogue.roboshop.internal/' -e 's/MONGO_DNSNAME/mongodb.roboshop.internal/' -e 's/CARTENDPOINT/cart.roboshop.internal/' -e 's/DBHOST/mysql.roboshop.internal/' /home/roboshop/${COMPONENT}/systemd.service
   StatusCheck $?
 
   echo "Setup ${COMPONENT} Service"
@@ -64,5 +54,37 @@ NODEJS() {
   echo "Start ${COMPONENT} Service"
   systemctl start ${COMPONENT} &>>${LOG_FILE}
   StatusCheck $?
+}
 
+NODEJS() {
+  echo "Setup NodeJS Repos"
+  curl -sL https://rpm.nodesource.com/setup_lts.x | bash &>>${LOG_FILE}
+  StatusCheck $?
+
+  echo "Install NodeJS"
+  yum install nodejs -y &>>${LOG_FILE}
+  StatusCheck $?
+
+  APP_PREREQ
+
+  echo "Install NodeJS Dependencies"
+  npm install &>>${LOG_FILE}
+  StatusCheck $?
+
+  SYSTEMD_SETUP
+}
+
+JAVA() {
+  echo "Install Maven"
+  yum install maven -y  &>>${LOG_FILE}
+  StatusCheck $?
+
+  APP_PREREQ
+
+  echo "Download Dependencies & Make Package"
+  mvn clean package &>>${LOG_FILE}
+  mv target/${COMPONENT}-1.0.jar ${COMPONENT}.jar   &>>${LOG_FILE}
+  StatusCheck $?
+
+  SYSTEMD_SETUP
 }
