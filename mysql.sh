@@ -6,7 +6,7 @@ curl -s -L -o /etc/yum.repos.d/mysql.repo https://raw.githubusercontent.com/robo
 StatusCheck $?
 
 echo "Disable MySQL Default Module to Enable 5.7 MySQL"
-dnf module disable mysql &>>$LOG_FILE
+dnf module disable mysql -y &>>$LOG_FILE
 StatusCheck $?
 
 echo "Install MySQL"
@@ -20,7 +20,11 @@ systemctl restart mysqld &>>$LOG_FILE
 StatusCheck $?
 
 
-# grep temp /var/log/mysqld.log
+DEFAULT_PASSWORD=$(grep 'A temporary password' /var/log/mysqld.log | awk '{print $NF}')
+
+echo "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('mypass');
+FLUSH PRIVILEGES;"
+
 
 # mysql_secure_installation
 
