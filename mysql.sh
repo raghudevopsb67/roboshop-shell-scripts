@@ -1,6 +1,11 @@
 LOG_FILE=/tmp/mysql
 source common.sh
 
+if [ -z "${ROBOSHOP_MYSQL_PASSWORD}" ]; then
+  echo -e "\e[31m ROBOSHOP_MYSQL_PASSWORD env variable is needed\e[0m"
+  exit 1
+fi
+
 echo "Setting Up MySQL Repo"
 curl -s -L -o /etc/yum.repos.d/mysql.repo https://raw.githubusercontent.com/roboshop-devops-project/mysql/main/mysql.repo &>>$LOG_FILE
 StatusCheck $?
