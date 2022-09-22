@@ -25,18 +25,15 @@ APP_PREREQ() {
   curl -s -L -o /tmp/${COMPONENT}.zip "https://github.com/roboshop-devops-project/${COMPONENT}/archive/main.zip" &>>${LOG_FILE}
   StatusCheck $?
 
-  cd /home/roboshop
-
   echo "Clean Old App Content"
-  rm -rf ${COMPONENT} &>>${LOG_FILE}
+  cd /home/roboshop && rm -rf ${COMPONENT} &>>${LOG_FILE}
   StatusCheck $?
 
   echo "Extract ${COMPONENT} Application Code"
   unzip /tmp/${COMPONENT}.zip &>>${LOG_FILE}
   StatusCheck $?
 
-  mv ${COMPONENT}-main ${COMPONENT}
-  cd /home/roboshop/${COMPONENT}
+  mv ${COMPONENT}-main ${COMPONENT} && cd /home/roboshop/${COMPONENT}
 }
 
 SYSTEMD_SETUP() {
